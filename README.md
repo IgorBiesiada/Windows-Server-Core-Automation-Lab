@@ -71,3 +71,23 @@ Rename-Computer -NewName "DC01" -Restart
 ## After restart host name is DC01
 
 ![Hostname](screenshots/04_hostname.png)
+
+### 4. Active Directory Deployment (Domain Controller)
+I installed the Active Directory Domain Services (AD DS) role and promoted the server to a Domain Controller, establishing a new forest named `mydomain.com.local`.
+
+**PowerShell Commands:**
+```powershell
+# 1. Install AD DS Role and Management Tools
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+
+# 2. Promote Server to Domain Controller (Create New Forest)
+# Note: You will be prompted for the Safe Mode Administrator Password
+Install-ADDSForest -DomainName "mydomain.com" -InstallDns
+```
+
+![domain_service_installation](screenshots/05_AD_domain_services.png)
+
+![domain_name](screenshots/06_mydomain.png)
+
+### 5. Post-Deployment User Security
+To enhance security and follow best practices, I moved away from using the default built-in `Administrator` account. I created a personalized administrative user and granted it elevated privileges by adding it to the **Domain Admins** group.
