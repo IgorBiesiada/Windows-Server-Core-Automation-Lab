@@ -91,3 +91,73 @@ Install-ADDSForest -DomainName "mydomain.com" -InstallDns
 
 ### 5. Post-Deployment User Security
 To enhance security and follow best practices, I moved away from using the default built-in `Administrator` account. I created a personalized administrative user and granted it elevated privileges by adding it to the **Domain Admins** group.
+
+The first step is to create a new folder just for admins to better manage users in the future.
+
+**PowerShell Commands:**
+```powershell
+#1 Creating a ADMINS folder
+Get-ADOrganizationalUnit -Name "ADMINS"
+```
+![admins folder](screenshots/07_ADMINS_folder.png)
+
+The second step was to create a new administrator account. I defined a variable for the password to ensure security, created the user directly in the ADMINS folder, and assigned the necessary administrative privileges.
+
+**PowerShell Commands:**
+```powershell
+#2. Creating a Secure Password Variable
+$Password = ConvertTo-SecureString "YourStrongPassword123!" -AsPlainText -Force
+
+#3. Creating the New Admin User in the ADMINS OU
+New-ADUser -Name "Igor Admin" `
+           -SamAccountName "adm.igor" `
+           -UserPrincipalName "adm.igor@mydomain.com" `
+           -AccountPassword $Password `
+           -Enabled $true `
+           -PasswordNeverExpires $true `
+           -Path "OU=ADMINS,DC=mydomain,DC=com"
+
+#4. Granting Administrative Privileges
+Add-ADGroupMember -Identity "Domain Admins" -Members "adm.igor"
+Add-ADGroupMember -Identity "Administrators" -Members "adm.igor"
+```
+
+Finally, to confirm that the account works and has the correct permissions, I logged off from the current session.
+
+**PowerShell Commands:**
+```powershell
+logoff
+```
+![admins folder](screenshots/08_new_AD_account.png)
+
+### 6. NAT & Routing Configuration
+
+To allow client machines (like Windows 10) on the internal network to access the Internet, I configured the server to act as a Router using NAT (Network Address Translation).
+
+Since I am using Server Core, I performed the installation and configuration purely via code. I utilized PowerShell to install the roles and netsh to map the specific network interfaces created in Step 1.
+
+* External Interface: Internet (Mode: Full/Public)
+
+*  Internal Interface: LAN (Mode: Private)
+
+
+**PowerShell Commands:**
+```powershell
+# 1. Install the Remote Access and Routing roles
+Install-WindowsFeature RemoteAccess -IncludeManagementTools
+Install-WindowsFeature Routing -IncludeManagementTools
+
+# 2. Initialize the Routing Service (Routing Only, no VPN)
+Install-RemoteAccess -VpnType RoutingOnly
+
+# 3. Enable NAT protocol using netsh (Standard for Core)
+netsh routing ip nat install
+
+# 4. Configure the External Interface (Internet)
+# "mode=full" enables NAT on this public interface
+netsh routing ip nat add interface "Internet" mode=full
+
+# 5. Configure the Internal Interface (LAN)
+# "mode=private" marks this as the internal network
+netsh routing ip nat add interface "LAN" mode=private
+```

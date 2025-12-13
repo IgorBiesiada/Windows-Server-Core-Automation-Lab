@@ -1,0 +1,2 @@
+Install-WindowsFeature RemoteAccess -IncludeManagementTools
+Install-WindowsFeature Routing -IncludeManagementTools
