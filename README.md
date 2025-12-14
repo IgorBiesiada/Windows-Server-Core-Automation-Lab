@@ -128,7 +128,7 @@ Finally, to confirm that the account works and has the correct permissions, I lo
 ```powershell
 logoff
 ```
-![admins folder](screenshots/08_new_AD_account.png)
+![admin account](screenshots/08_new_AD_account.png)
 
 ### 6. NAT & Routing Configuration
 
@@ -143,21 +143,33 @@ Since I am using Server Core, I performed the installation and configuration pur
 
 **PowerShell Commands:**
 ```powershell
-# 1. Install the Remote Access and Routing roles
-Install-WindowsFeature RemoteAccess -IncludeManagementTools
-Install-WindowsFeature Routing -IncludeManagementTools
+# 1. Install Routing support (Enables packet forwarding capability)
+Install-WindowsFeature Routing
 
-# 2. Initialize the Routing Service (Routing Only, no VPN)
-Install-RemoteAccess -VpnType RoutingOnly
-
-# 3. Enable NAT protocol using netsh (Standard for Core)
-netsh routing ip nat install
-
-# 4. Configure the External Interface (Internet)
-# "mode=full" enables NAT on this public interface
-netsh routing ip nat add interface "Internet" mode=full
-
-# 5. Configure the Internal Interface (LAN)
-# "mode=private" marks this as the internal network
-netsh routing ip nat add interface "LAN" mode=private
+# 2. Create the NAT Rule
+# This creates a gateway for the entire 172.16.0.0/24 subnet.
+# Any traffic from the LAN will be translated to the external IP automatically.
+New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "172.16.0.0/24"
 ```
+![RAS_NAT](screenshots/09_RAS_NAT.png)
+
+### 7. DHCP Server Configuration
+To eliminate the need for manual IP configuration on client workstations, I installed and configured the DHCP Server role.
+
+The server now automatically provides network configuration to any device connecting to the internal switch. I created a scope called "BiuroLAN" with the following parameters:
+
+* IP Address Pool: 172.16.0.50 to 172.16.0.200 (leaving lower IPs  for static servers).
+
+* Subnet Mask: 255.255.255.0.
+
+* Default Gateway (Option 003): 172.16.0.1 (Points to this server to allow Internet access via NAT).
+
+* DNS Server (Option 006): 172.16.0.1 (Points to this server to resolve Active Directory domain names).
+
+**PowerShell Commands:**
+```powershell
+# 1. Install DHCP Role
+Install-WindowsFeature DHCP -IncludeManagementTools
+
+```
+![DHCP](screenshots/10_DHCP.png)

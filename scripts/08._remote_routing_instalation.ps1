@@ -1,2 +1,2 @@
-Install-WindowsFeature RemoteAccess -IncludeManagementTools
-Install-WindowsFeature Routing -IncludeManagementTools
+Install-WindowsFeature Routing
+New-NetNat -Name "LabNAT" -InternalIPInterfaceAddressPrefix "172.16.0.0/24"
