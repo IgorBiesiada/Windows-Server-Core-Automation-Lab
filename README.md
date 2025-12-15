@@ -171,5 +171,12 @@ The server now automatically provides network configuration to any device connec
 # 1. Install DHCP Role
 Install-WindowsFeature DHCP -IncludeManagementTools
 
+# 2. Authorize DHCP in Active Directory
+Add-DhcpServerInDC -DnsName "DC01" -IPAddress 172.16.0.1
+
+# 3. Create Scope & Set Network Options
+Add-DhcpServerv4Scope -Name "BiuroLAN" -StartRange 172.16.0.50 -EndRange 172.16.0.200 -SubnetMask 255.255.255.0 -State Active
+Set-DhcpServerv4OptionValue -ScopeId 172.16.0.0 -OptionId 3 -Value 172.16.0.1 # Gateway
+Set-DhcpServerv4OptionValue -ScopeId 172.16.0.0 -OptionId 6 -Value 172.16.0.1 # DNS
 ```
 ![DHCP](screenshots/10_DHCP.png)
