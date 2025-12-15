@@ -180,3 +180,62 @@ Set-DhcpServerv4OptionValue -ScopeId 172.16.0.0 -OptionId 3 -Value 172.16.0.1 # 
 Set-DhcpServerv4OptionValue -ScopeId 172.16.0.0 -OptionId 6 -Value 172.16.0.1 # DNS
 ```
 ![DHCP](screenshots/10_DHCP.png)
+
+### 8. Automating User Data Generation with Python
+
+To simulate a realistic enterprise environment, I needed to populate Active Directory with a significant number of user accounts. Instead of manual entry, I developed a Python automation script to generate synthetic user data.
+
+I used the Faker library for realistic Polish names, csv for data formatting, and the os library to ensure robust file path handling.
+
+🛠️ Environment Setup
+I followed Python best practices by isolating the project in a virtual environment:
+
+* Created a dedicated directory: python_script/
+
+* Initialized a virtual environment: python -m venv venv
+
+* Installed dependencies: pip install Faker
+
+* Freezed dependencies: pip freeze > requirements.txt
+
+📄 The Generator Script (script.py)
+This script generates 100 unique users and saves them to names.csv. I implemented the os module to dynamically determine the script's location, ensuring the output file is always saved in the python_script/ directory, regardless of where the command is executed from.
+
+**Python Script:**
+```python
+from faker import Faker
+import csv
+import os
+
+
+fake = Faker('pl_PL')
+
+current_folder = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_folder, 'names.csv')
+
+
+with open(file_path, 'w', newline='', encoding='utf-8-sig') as csvfile:
+    fieldsnames = ['firstName', 'lastName']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldsnames)
+    writer.writeheader()
+    for i in range(100):
+        first_name = fake.first_name() 
+        last_name = fake.last_name()
+        writer.writerow({'firstName': first_name , 'lastName': last_name})
+```
+
+📊 Output Verification
+The script produces a standard CSV file (names.csv) ready for bulk import into Active Directory:
+
+```csv
+firstName,lastName
+Piotr,Pierzak
+Maciej,Faruga
+Patryk,Andrejczuk
+Dorota,Zawartka
+```
+
+Key Takeaways:
+* Automation: Replaced manual work with a scalable script.
+* Robustness: Used os.path to prevent file location errors.
+* Standardization: Used CSV format as a universal data exchange standard.
