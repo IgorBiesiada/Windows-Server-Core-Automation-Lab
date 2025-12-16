@@ -239,3 +239,47 @@ Key Takeaways:
 * Automation: Replaced manual work with a scalable script.
 * Robustness: Used os.path to prevent file location errors.
 * Standardization: Used CSV format as a universal data exchange standard.
+
+9. Automated Bulk User Onboarding
+Ideally, this process utilizes a Python script to generate a large dataset of users, which is then transferred to the server. However, due to the strict isolation of the Server Core environment (simulating an air-gapped or high-security datacenter) and restrictions on clipboard/file sharing, I implemented a local data injection strategy.
+
+Instead of downloading a compromised HTML file via Invoke-WebRequest, I generated the CSV payload directly on the server's file system before executing the provisioning logic.
+
+# Process Workflow:
+
+* Local Data Injection: Created the users.csv dataset directly on the local disk using PowerShell pipeline redirection, bypassing network restrictions.
+
+* Credential Security: Defined a standard initial password for all new accounts (Password123!) converted to a SecureString.
+
+* Bulk Provisioning: Looped through the local CSV dataset using Import-Csv and piped the data into the New-ADUser cmdlet.
+
+* Logic & Mapping: Automatically generated the SamAccountName (login) format as firstname.lastname and mapped attributes to the Domain Controller.
+
+**PowerShell Script:**
+```powershell
+# 1. Local Data Generation (Workaround for isolated/air-gapped environment)
+# Generating a dataset directly on the C: drive to bypass transfer restrictions
+"firstName,lastName","Piotr,Pierzak","Marek,Admin","Jan,Testowy" | Set-Content C:\Users\a-igor\users.csv
+
+# 2. Secure Password Definition
+$pass = ConvertTo-SecureString "Password123!" -AsPlainText -Force
+
+# 3. Bulk Creation Loop
+Import-Csv "C:\Users\a-igor\users.csv" | ForEach-Object {
+    
+    # Generate login: firstname.lastname
+    $samAccount = ($_.firstName + "." + $_.lastName).ToLower()
+    
+    # Create AD User
+    New-ADUser -Name "$($_.firstName) $($_.lastName)" `
+               -SamAccountName $samAccount `
+               -UserPrincipalName "$samAccount@mydomain.com" `
+               -GivenName $_.firstName `
+               -Surname $_.lastName `
+               -AccountPassword $pass `
+               -Enabled $true `
+               -Path "CN=Users,DC=mydomain,DC=com"
+}
+```
+
+![new users](screenshots/11_new_users.png)
