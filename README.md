@@ -283,3 +283,49 @@ Import-Csv "C:\Users\a-igor\users.csv" | ForEach-Object {
 ```
 
 ![new users](screenshots/11_new_users.png)
+
+## 10. Client Workstation Configuration & Connectivity
+
+To simulate a real-world corporate environment, a client machine running **Windows 10 Pro** was deployed. The goal was to establish a connection between the workstation and the Windows Server Core (Domain Controller) within an isolated network.
+
+### Network Configuration Steps:
+1.  **Virtualization Network:**
+    * Configured the Network Adapter to **Internal Network** mode (using the same tag: `intnet`) to ensure physical isolation from the public internet and direct connection to the server.
+2.  **Static IP Configuration:**
+    * Manually assigned an IPv4 address to ensure stability and connectivity before Domain Join.
+    * **IP Address:** `172.16.0.20`
+    * **Subnet Mask:** `255.255.0.0`
+    * **Default Gateway:** `172.16.0.1` (Server IP)
+    * **Preferred DNS:** `172.16.0.1` (Crucial step: Pointing DNS to the Domain Controller allows the client to resolve the domain name).
+
+### Connectivity Verification (Ping Test)
+Performed a `ping` test from the Client machine to the Server (`172.16.0.1`).
+* **Result:** Successful reply (`Reply from 172.16.0.1...`).
+* **Conclusion:** The internal network routing is functioning correctly, and the client can communicate with the Domain Controller.
+
+![Ping Test Result](screenshots/12_ping_server.png)
+
+## 11. Domain Join & Final Integration
+
+The final phase of the project involved promoting the client workstation from a standalone workgroup member to a fully managed resource within the **mydomain.com** Active Directory environment.
+
+### Execution Steps:
+1.  **Domain Membership Change:**
+    * Accessed `System Properties` on the client machine.
+    * Changed member status from `WORKGROUP` to **Domain**: `mydomain.com`.
+2.  **Authorization:**
+    * Provided Domain Administrator credentials when prompted, proving that the client could communicate with the Domain Controller and authenticate privileges.
+3.  **Success Confirmation:**
+    * Received the system confirmation message: **"Welcome to the mydomain.com domain."**
+    * This confirms that DNS resolution, network routing, and AD permissions are all configured correctly.
+
+![Domain Join Success](screenshots/13_welcome_domain.png)
+
+### User Login Verification
+Following the required system restart, the connectivity was tested from the user's perspective.
+* **Action:** Attempted login using the Active Directory user account created in previous steps.
+* **User:** `Piotr Pierzak` (Logon: `mydomain\Piotr.Pierzak`)
+* **Result:** Successful authentication and profile creation. The user can now log in to the workstation using credentials managed centrally by the Windows Server Core.
+
+---
+**Project Status:** COMPLETED ✅
