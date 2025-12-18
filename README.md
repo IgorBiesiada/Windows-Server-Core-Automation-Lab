@@ -11,7 +11,7 @@ The main objective is to simulate a real-world enterprise scenario where server 
 * **Hypervisor:** Oracle VirtualBox
 * **Operating System:** Windows Server 2022 Core
 * **Tools:** PowerShell, SConfig
-
+* **Python 3:** Scripting for bulk data generation and automation logic (e.g., generating user lists for AD import).
 ---
 
 ## ⚙️ Configuration Log
